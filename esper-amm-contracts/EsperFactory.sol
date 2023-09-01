@@ -13,8 +13,8 @@ contract EsperFactory is IEsperFactory {
     address public feeTo;
 
     //uint public constant FEE_DENOMINATOR = 100000;
-    uint256 public constant OWNER_FEE_SHARE_MAX = 100000; // 100%
-    uint256 public ownerFeeShare = 50000; // default value = 50%
+    uint256 public constant OWNER_FEE_SHARE_MAX = 20000; // 20%
+    uint256 public ownerFeeShare = 20000; // default value = 20%
 
     uint256 public constant REFERER_FEE_SHARE_MAX = 20000; // 20%
 

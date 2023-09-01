@@ -265,8 +265,10 @@ contract EsperPair is IEsperPair, UniswapV2ERC20 {
     tokensData.remainingFee0 = amount0In.mul(_token0FeePercent) / FEE_DENOMINATOR;
     tokensData.remainingFee1 = amount1In.mul(_token1FeePercent) / FEE_DENOMINATOR;
 
-    {// scope for referer/stable fees management
+    {
       uint fee = 0;
+
+      // referrer scope
       (address referrer, uint256 referrerInputFeeShare) = IEsperFactory(factory).referrerInfo(address(this));
       if (referrerInputFeeShare > 0) {
         if (amount0In > 0) {
@@ -280,23 +282,22 @@ contract EsperPair is IEsperPair, UniswapV2ERC20 {
           _safeTransfer(tokensData.token1, referrer, fee);
         }
       }
-
-      if(stableSwap){
-        (uint ownerFeeShare, address feeTo) = IEsperFactory(factory).feeInfo();
-        if(feeTo != address(0)) {
-          ownerFeeShare = FEE_DENOMINATOR.sub(referrerInputFeeShare).mul(ownerFeeShare);
-          if (amount0In > 0) {
-            fee = amount0In.mul(ownerFeeShare).mul(_token0FeePercent) / (FEE_DENOMINATOR ** 3);
-            tokensData.remainingFee0 = tokensData.remainingFee0.sub(fee);
-            _safeTransfer(tokensData.token0, feeTo, fee);
-          }
-          if (amount1In > 0) {
-            fee = amount1In.mul(ownerFeeShare).mul(_token1FeePercent) / (FEE_DENOMINATOR ** 3);
-            tokensData.remainingFee1 = tokensData.remainingFee1.sub(fee);
-            _safeTransfer(tokensData.token1, feeTo, fee);
-          }
+      
+      // protocol fee scope
+      (uint ownerFeeShare, address feeTo) = IEsperFactory(factory).feeInfo();
+      if(feeTo != address(0)) {
+        if (amount0In > 0) {
+          fee = amount0In.mul(ownerFeeShare).mul(_token0FeePercent) / (FEE_DENOMINATOR ** 2);
+          tokensData.remainingFee0 = tokensData.remainingFee0.sub(fee);
+          _safeTransfer(tokensData.token0, feeTo, fee);
+        }
+        if (amount1In > 0) {
+          fee = amount1In.mul(ownerFeeShare).mul(_token1FeePercent) / (FEE_DENOMINATOR ** 2);
+          tokensData.remainingFee1 = tokensData.remainingFee1.sub(fee);
+          _safeTransfer(tokensData.token1, feeTo, fee);
         }
       }
+
       // readjust tokens balance
       if (amount0In > 0) tokensData.balance0 = IERC20(tokensData.token0).balanceOf(address(this));
       if (amount1In > 0) tokensData.balance1 = IERC20(tokensData.token1).balanceOf(address(this));
